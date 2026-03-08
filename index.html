@@ -1,53 +1,393 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>С 8 Марта!</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Открытка с падающими машинами 🚗</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #1e2b38 0%, #121b23 100%);
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            position: relative;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        /* Контейнер для падающих машин (задний фон) */
+        .cars-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none; /* чтобы не мешать кликам по открытке */
+            overflow: hidden;
+        }
+
+        .falling-car {
+            position: absolute;
+            font-size: clamp(24px, 6vw, 60px);
+            user-select: none;
+            opacity: 0.7;
+            filter: drop-shadow(0 10px 8px rgba(0,0,0,0.4));
+            animation: fall linear infinite;
+            z-index: 0;
+            white-space: nowrap;
+            transform: rotate(0deg);
+            /* каждая машина получит свой animation-duration, delay и left из JS */
+        }
+
+        /* Ключевые кадры падения: сверху вниз с небольшим отклонением по горизонтали */
+        @keyframes fall {
+            0% {
+                transform: translateY(-20vh) rotate(0deg);
+                opacity: 0.9;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0.2;
+            }
+        }
+
+        /* открытка поверх фона */
+        .card-wrapper {
+            max-width: 800px;
+            width: 100%;
+            perspective: 2000px;
+            position: relative;
+            z-index: 10; /* выше машин */
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            transition: transform 0.8s ease-in-out;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            box-shadow: 0 30px 40px -15px rgba(0,0,0,0.8);
+            border-radius: 24px;
+        }
+
+        .card-front, .card-inside {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            backface-visibility: hidden;
+            border-radius: 24px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            box-shadow: inset 0 2px 10px rgba(255,255,255,0.2);
+        }
+
+        /* ЛИЦЕВАЯ СТОРОНА (конверт) */
+        .card-front {
+            background: radial-gradient(circle at 30% 30%, #f9e3b3, #e6c48b);
+            background-image: repeating-linear-gradient(45deg, rgba(255,215,130,0.2) 0px, rgba(255,215,130,0.2) 15px, rgba(240,180,70,0.1) 15px, rgba(240,180,70,0.1) 30px);
+            border: 3px solid #fff6dd;
+            transform: rotateY(0deg);
+        }
+
+        .envelope-decor {
+            text-align: center;
+            filter: drop-shadow(0 8px 12px rgba(0,0,0,0.3));
+        }
+
+        .envelope-icon {
+            font-size: 90px;
+            line-height: 1;
+            margin-bottom: 10px;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        .card-front:hover .envelope-icon {
+            transform: scale(1.05) translateY(-4px);
+        }
+
+        .stamp {
+            font-size: 28px;
+            background: #ffd966;
+            color: #6b3f00;
+            padding: 8px 24px;
+            border-radius: 60px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            box-shadow: 0 4px 0 #b57c1a;
+            font-family: 'Courier New', monospace;
+            border: 2px dashed #fff2b5;
+            margin-top: 25px;
+        }
+
+        .open-label {
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(6px);
+            color: white;
+            padding: 10px 30px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            border: 1px solid rgba(255,255,230,0.6);
+            margin-top: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ВНУТРЕННЯЯ СТОРОНА (поздравление) */
+        .card-inside {
+            background: #fffcf0;
+            background-image: radial-gradient(circle at 10px 10px, #ffeacb 2px, transparent 2px), radial-gradient(circle at 30px 25px, #ffeacb 2px, transparent 2px);
+            background-size: 40px 40px;
+            transform: rotateY(180deg);
+            color: #2e241f;
+            border: 5px double #d4af7a;
+            justify-content: space-between;
+        }
+
+        .inside-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 20px 10px;
+        }
+
+        .greeting-title {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: clamp(2rem, 7vw, 3.5rem);
+            font-weight: 700;
+            color: #aa4e2b;
+            text-shadow: 2px 2px 0 #ffd78c;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .greeting-message {
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            color: #3d2b1a;
+            background: rgba(255,245,215,0.8);
+            padding: 18px 25px;
+            border-radius: 100px 20px 100px 20px;
+            border-left: 6px solid #e6a345;
+            margin: 15px 0;
+            max-width: 90%;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            font-style: italic;
+        }
+
+        .signature {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: #7a4d2e;
+            border-top: 2px solid #eac58a;
+            padding-top: 20px;
+            width: 80%;
+            text-align: center;
+        }
+
+        .heart {
+            font-size: 42px;
+            filter: drop-shadow(0 4px 2px rgba(200,100,50,0.3));
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .close-btn {
+            background: #e3c184;
+            border: none;
+            border-radius: 40px;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #38230e;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid #ffe5b1;
+            box-shadow: 0 5px 0 #b27d40;
+        }
+
+        .close-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #b27d40;
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 15px;
+            color: #c0b7a8;
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .card-wrapper .card-inner.opened {
+            transform: rotateY(180deg);
+        }
+
+        @media (max-width: 550px) {
+            .envelope-icon {
+                font-size: 60px;
+            }
+            .stamp {
+                font-size: 18px;
+                padding: 4px 16px;
+            }
+            .open-label {
+                font-size: 1rem;
+                padding: 8px 20px;
+            }
+            .greeting-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Слой с падающими машинами (генерируются через JS) -->
+    <div class="cars-background" id="carsBackground"></div>
 
-<header>
-    <h1>💐 С 8 Марта! 💐</h1>
-    <p>Спасибо за заботу, любовь и поддержку</p>
-</header>
+    <div class="card-wrapper">
+        <div class="card-inner" id="cardInner">
+            <!-- ЛИЦЕВАЯ СТОРОНА -->
+            <div class="card-front">
+                <div class="envelope-decor">
+                    <div class="envelope-icon">🚗💨</div>
+                    <div class="stamp">С ПРАЗДНИКОМ</div>
+                </div>
+                <div class="open-label">
+                    <span>👆 жми — машины падают</span>
+                </div>
+            </div>
 
-<section class="gallery">
-    <img src="Flowers.png">
-</section>
-
-<section class="cards">
-    <div class="card">
-        <h3>Мама</h3>
-        <p>Ты всегда рядом ❤️</p>
+            <!-- ВНУТРЕННЯЯ СТОРОНА -->
+            <div class="card-inside">
+                <div class="inside-content">
+                    <div class="heart">🚘❤️</div>
+                    <div class="greeting-title">ТЫК — И МАШИНКИ!</div>
+                    <div class="greeting-message">
+                        Пусть жизнь мчится, как быстрая машина,<br>
+                        только по зелёному свету!
+                    </div>
+                    <div class="signature">Автомобильный привет 🚙</div>
+                    <button class="close-btn" id="closeBtn">⬅ закрыть</button>
+                </div>
+            </div>
+        </div>
+        <div class="footer-note">смотри, сколько тачек падает с неба 🚚🚗</div>
     </div>
 
-    <div class="card">
-        <h3>Сестра</h3>
-        <p>Ты мой лучший друг 🌸</p>
-    </div>
-    
-        <div class="card">
-        <h3>Сестра</h3>
-        <p>Ты мой лучший друг 🌸</p>
-    </div>
+    <script>
+        (function() {
+            // Элементы открытки
+            const cardInner = document.getElementById('cardInner');
+            const closeBtn = document.getElementById('closeBtn');
+            
+            // Контейнер для машин
+            const carsContainer = document.getElementById('carsBackground');
+            
+            // Массив символов машин (можно добавить ещё)
+            const carIcons = ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🚚', '🚛', '🚜', '🛻', '🚘', '🚖', '🚔', '🚍'];
+            
+            // Количество машин (чем больше, тем гуще)
+            const CAR_COUNT = 25;
 
-        <div class="card">
-        <h3>Сестра</h3>
-        <p>Ты мой лучший друг 🌸</p>
-    </div>
+            // Генерация машин
+            for (let i = 0; i < CAR_COUNT; i++) {
+                createFallingCar();
+            }
 
-        <div class="card">
-        <h3>Сестра</h3>
-        <p>Ты мой лучший друг 🌸</p>
-    </div>
-</section>
+            function createFallingCar() {
+                const car = document.createElement('div');
+                car.classList.add('falling-car');
+                
+                // Случайный символ машины
+                const randomCar = carIcons[Math.floor(Math.random() * carIcons.length)];
+                car.textContent = randomCar;
+                
+                // Случайный размер (немного вариаций)
+                const sizeFactor = 0.7 + Math.random() * 0.8; // от 0.7 до 1.5
+                const baseSize = 48; // базовый размер в px для расчета
+                const fontSize = Math.round(baseSize * sizeFactor);
+                car.style.fontSize = fontSize + 'px';
+                
+                // Случайная горизонтальная позиция (от 0% до 100%)
+                const leftPos = Math.random() * 100;
+                car.style.left = leftPos + '%';
+                
+                // Длительность падения от 6 до 18 секунд (чтобы не синхронно)
+                const duration = 6 + Math.random() * 12; // 6-18 сек
+                car.style.animationDuration = duration + 's';
+                
+                // Задержка начала (чтобы не все сразу) от 0 до 12 секунд
+                const delay = Math.random() * 12;
+                car.style.animationDelay = delay + 's';
+                
+                // Небольшой поворот для интереса
+                const rotate = Math.random() * 30 - 15; // от -15deg до 15deg
+                car.style.transform = `rotate(${rotate}deg)`;
+                
+                // Добавляем в контейнер
+                carsContainer.appendChild(car);
+            }
 
-<button class="surprise-btn">Открыть сюрприз</button>
+            // Логика открытки (клик, кнопка)
+            function openCard() {
+                cardInner.classList.add('opened');
+            }
 
-<div class="surprise">
-    🌷 Ты самая лучшая! 🌷
-</div>
+            function closeCard() {
+                cardInner.classList.remove('opened');
+            }
 
+            cardInner.addEventListener('click', function(event) {
+                // если клик по кнопке "закрыть" — игнорируем здесь
+                if (event.target.closest('.close-btn')) {
+                    return;
+                }
+                if (cardInner.classList.contains('opened')) {
+                    closeCard();
+                } else {
+                    openCard();
+                }
+            });
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    closeCard();
+                });
+            }
+
+            // Дополнительно: при желании можно добавить машины и при открытии (уже есть фон, но можно)
+            // Можно динамически менять текст машин, но оставим как есть.
+        })();
+    </script>
 </body>
 </html>
